@@ -4,6 +4,10 @@ import { createLogger } from './logger.js';
 import { createWorkQueue, QueueFullError } from './queue.js';
 import { createWorker, type MentionEvent } from './worker.js';
 import { createWikiSync } from './wiki-sync.js';
+import {
+  fetchPriorTurns as fetchPriorTurnsImpl,
+  type SlackMessage,
+} from './thread-context.js';
 
 const config = loadConfig();
 const logger = createLogger(config.LOG_LEVEL);
@@ -48,7 +52,16 @@ const worker = createWorker({
   postMessage: async ({ channel, thread_ts, text }) => {
     await app.client.chat.postMessage({ channel, thread_ts, text });
   },
-  fetchPriorTurns: async () => [], // Phase 4에서 구현
+  fetchPriorTurns: (channel, thread_ts, botUserId) =>
+    fetchPriorTurnsImpl({
+      channel,
+      thread_ts,
+      botUserId,
+      conversationsReplies: async ({ channel: ch, ts }) => {
+        const r = await app.client.conversations.replies({ channel: ch, ts });
+        return { messages: (r.messages ?? []) as unknown as SlackMessage[] };
+      },
+    }),
   withReadLock: (fn) => wikiSync.withReadLock(fn),
   wikiPath: config.WIKI_LOCAL_PATH,
   githubBaseUrl: config.WIKI_REPO_GITHUB_URL,

@@ -129,8 +129,9 @@ if (config.SLACK_MODE === 'http') {
   });
 }
 
-await app.start(config.PORT);
-
 const authResult = await app.client.auth.test();
 botUserId = (authResult.user_id as string) ?? '';
-logger.info({ botUserId, port: config.PORT, mode: config.SLACK_MODE }, 'bot started');
+logger.info({ botUserId }, 'bot identity resolved');
+
+await app.start(config.PORT);
+logger.info({ port: config.PORT, mode: config.SLACK_MODE }, 'bot started');

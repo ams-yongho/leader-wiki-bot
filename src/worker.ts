@@ -58,6 +58,15 @@ export function createWorker(deps: WorkerDeps) {
         return toSlackMrkdwn(cited);
       });
 
+      if (!answer.trim()) {
+        await deps.postMessage({
+          channel: event.channel,
+          thread_ts: event.thread_ts,
+          text: '답변을 생성할 수 없었습니다. 잠시 후 다시 시도해주세요.',
+        });
+        return;
+      }
+
       const chunks = splitForSlack(answer);
       for (const chunk of chunks) {
         await deps.postMessage({ channel: event.channel, thread_ts: event.thread_ts, text: chunk });

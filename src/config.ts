@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 const Schema = z.object({
   SLACK_BOT_TOKEN: z.string().min(1),
-  SLACK_APP_TOKEN: z.string().optional(),
-  SLACK_SIGNING_SECRET: z.string().optional(),
+  SLACK_APP_TOKEN: z.string().min(1).optional(),
+  SLACK_SIGNING_SECRET: z.string().min(1).optional(),
   SLACK_MODE: z.enum(['socket', 'http']).default('socket'),
 
   ANTHROPIC_API_KEY: z.string().min(1),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-4-6'),
 
-  WIKI_REPO_URL: z.string().optional(),
+  WIKI_REPO_URL: z.string().min(1).optional(),
   WIKI_REPO_BRANCH: z.string().default('main'),
   WIKI_LOCAL_PATH: z.string().min(1),
   WIKI_SYNC_INTERVAL_CRON: z.string().default('*/5 * * * *'),

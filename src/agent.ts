@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { Logger } from './logger.js';
+import { retryOnRateLimit } from './retry.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -60,13 +61,13 @@ function buildPrompt(question: string, priorTurns: PriorTurn[]): string {
   return lines.join('\n');
 }
 
-export async function askAgent(input: AskAgentInput, opts: AskAgentOptions): Promise<string> {
-  const systemPrompt = await loadSystemPrompt();
+async function runOnce(
+  input: AskAgentInput,
+  opts: AskAgentOptions,
+  systemPrompt: string,
+): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
-
-  opts.logger.debug({ question: input.question, priorTurns: input.priorTurns.length }, 'askAgent start');
-
   try {
     const prompt = buildPrompt(input.question, input.priorTurns);
 
@@ -96,9 +97,18 @@ export async function askAgent(input: AskAgentInput, opts: AskAgentOptions): Pro
       }
     }
 
-    opts.logger.debug({ answerLength: answer.length }, 'askAgent done');
     return answer.trim();
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function askAgent(input: AskAgentInput, opts: AskAgentOptions): Promise<string> {
+  const systemPrompt = await loadSystemPrompt();
+  opts.logger.debug({ question: input.question, priorTurns: input.priorTurns.length }, 'askAgent start');
+  const answer = await retryOnRateLimit(() => runOnce(input, opts, systemPrompt), {
+    logger: opts.logger,
+  });
+  opts.logger.debug({ answerLength: answer.length }, 'askAgent done');
+  return answer;
 }

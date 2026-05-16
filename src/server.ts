@@ -2,7 +2,7 @@ import bolt from '@slack/bolt';
 import { loadConfig } from './config.js';
 import { createLogger } from './logger.js';
 import { createWorkQueue, QueueFullError } from './queue.js';
-import { createEchoWorker, type MentionEvent } from './worker.js';
+import { createWorker, type MentionEvent } from './worker.js';
 import { createWikiSync } from './wiki-sync.js';
 
 const config = loadConfig();
@@ -24,29 +24,37 @@ const app = new bolt.App({
   },
 });
 
-const queue = createWorkQueue({
-  concurrency: config.MAX_CONCURRENT_AGENTS,
-  maxSize: config.QUEUE_MAX_SIZE,
-});
-
 const wikiSync = createWikiSync({
   localPath: config.WIKI_LOCAL_PATH,
   repoUrl: config.WIKI_REPO_URL,
   branch: config.WIKI_REPO_BRANCH,
   logger,
 });
-
 await wikiSync.ensureCloned();
 if (config.WIKI_REPO_URL) {
   wikiSync.scheduleCron(config.WIKI_SYNC_INTERVAL_CRON);
   logger.info({ cron: config.WIKI_SYNC_INTERVAL_CRON }, 'wiki cron scheduled');
 }
 
-const worker = createEchoWorker({
+const queue = createWorkQueue({
+  concurrency: config.MAX_CONCURRENT_AGENTS,
+  maxSize: config.QUEUE_MAX_SIZE,
+});
+
+let botUserId = '';
+
+const worker = createWorker({
   logger,
   postMessage: async ({ channel, thread_ts, text }) => {
     await app.client.chat.postMessage({ channel, thread_ts, text });
   },
+  fetchPriorTurns: async () => [], // Phase 4에서 구현
+  withReadLock: (fn) => wikiSync.withReadLock(fn),
+  wikiPath: config.WIKI_LOCAL_PATH,
+  githubBaseUrl: config.WIKI_REPO_GITHUB_URL,
+  branch: config.WIKI_REPO_BRANCH,
+  model: config.ANTHROPIC_MODEL,
+  timeoutMs: config.AGENT_TIMEOUT_MS,
 });
 
 app.event('app_mention', async ({ event, body }) => {
@@ -61,8 +69,9 @@ app.event('app_mention', async ({ event, body }) => {
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
     user: event.user ?? 'unknown',
-    text: event.text,
+    text: event.text ?? '',
     eventId: event.ts,
+    botUserId,
   };
 
   try {
@@ -108,4 +117,7 @@ if (config.SLACK_MODE === 'http') {
 }
 
 await app.start(config.PORT);
-logger.info({ port: config.PORT, mode: config.SLACK_MODE }, 'bot started');
+
+const authResult = await app.client.auth.test();
+botUserId = (authResult.user_id as string) ?? '';
+logger.info({ botUserId, port: config.PORT, mode: config.SLACK_MODE }, 'bot started');

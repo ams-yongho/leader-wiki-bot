@@ -37,7 +37,7 @@ const worker = createEchoWorker({
 
 app.event('app_mention', async ({ event, body }) => {
   // Ignore Slack retries to avoid duplicate processing
-  const retryNum = (body as { retry_num?: number }).retry_num;
+  const retryNum = (body as { retryNum?: number }).retryNum;
   if (retryNum !== undefined && retryNum > 0) {
     logger.warn({ retryNum }, 'skipping Slack retry');
     return;

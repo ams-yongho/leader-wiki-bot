@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 /.history
 /.serena
 /.claude/worktrees
+.claude/settings.local.json

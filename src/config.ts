@@ -6,7 +6,8 @@ const Schema = z.object({
   SLACK_SIGNING_SECRET: z.string().min(1).optional(),
   SLACK_MODE: z.enum(['socket', 'http']).default('socket'),
 
-  ANTHROPIC_API_KEY: z.string().min(1),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  CLAUDE_CODE_OAUTH_TOKEN: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-4-6'),
 
   WIKI_REPO_URL: z.string().min(1).optional(),
@@ -31,6 +32,9 @@ export function loadConfig(): Config {
   }
   if (cfg.SLACK_MODE === 'http' && !cfg.SLACK_SIGNING_SECRET) {
     throw new Error('SLACK_SIGNING_SECRET is required when SLACK_MODE=http');
+  }
+  if (!cfg.ANTHROPIC_API_KEY && !cfg.CLAUDE_CODE_OAUTH_TOKEN) {
+    throw new Error('Either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN is required');
   }
   return cfg;
 }

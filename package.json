@@ -1,0 +1,38 @@
+{
+  "name": "leader-wiki-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.143",
+    "@slack/bolt": "^3",
+    "node-cron": "^3",
+    "p-queue": "^8",
+    "pino": "^9",
+    "simple-git": "^3",
+    "slackify-markdown": "^4",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/node-cron": "^3",
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "eslint": "^8",
+    "prettier": "^3",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vitest": "^1"
+  }
+}

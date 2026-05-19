@@ -5,13 +5,24 @@
 # 환경변수:
 #   WIKI_LOCAL_PATH_HOST  pull할 위키 디렉토리의 호스트 절대경로 (필수)
 #   SYNC_LOG_FILE         로그 파일 경로 (기본: ~/Library/Logs/leader-wiki-sync.log)
+#
+# launchd 환경 주의사항:
+#   - LaunchAgent는 SSH_AUTH_SOCK을 상속받지 않는다. 위키가 SSH 원격을 쓰면
+#     git pull이 인증 단계에서 멈춘다. 해결책: (1) 원격을 HTTPS + credential
+#     helper 로 바꾸거나, (2) GIT_SSH_COMMAND 로 keyfile 직접 지정하거나,
+#     (3) ~/.gitconfig 의 credential helper 설정 사용.
+#   - LANG/LC_ALL은 사용자 세션을 따른다. 한국어 로케일이면 git 메시지가
+#     한국어로 로깅된다.
 
 set -uo pipefail
 
 WIKI_DIR="${WIKI_LOCAL_PATH_HOST:-}"
 LOG_FILE="${SYNC_LOG_FILE:-$HOME/Library/Logs/leader-wiki-sync.log}"
 
-mkdir -p "$(dirname "$LOG_FILE")"
+if ! mkdir -p "$(dirname "$LOG_FILE")"; then
+  echo "ERROR cannot create log directory: $(dirname "$LOG_FILE")" >&2
+  exit 4
+fi
 
 timestamp() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 

@@ -1,0 +1,21 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: prod
+    image: leader-wiki-bot:prod
+    env_file: .env
+    environment:
+      WIKI_LOCAL_PATH: /workspace/leader-wiki
+      WIKI_SYNC_INTERVAL_CRON: ""
+    volumes:
+      - ../leader-wiki:/workspace/leader-wiki:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

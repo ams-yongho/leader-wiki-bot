@@ -21,6 +21,16 @@ const Schema = z.object({
   QUEUE_MAX_SIZE: z.coerce.number().int().min(1).default(20),
   AGENT_TIMEOUT_MS: z.coerce.number().int().min(1000).default(120000),
   PORT: z.coerce.number().int().default(3000),
+
+  QUERY_LOG_ENABLED: z
+    .preprocess((v) => {
+      if (v === undefined || v === '') return true;
+      if (v === 'false' || v === '0') return false;
+      if (v === 'true' || v === '1') return true;
+      return v;
+    }, z.boolean())
+    .default(true),
+  QUERY_LOG_DB_PATH: z.string().min(1).default('/workspace/data/queries.db'),
 });
 
 export type Config = z.infer<typeof Schema>;

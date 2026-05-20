@@ -50,4 +50,20 @@ describe('loadConfig', () => {
     process.env.LOG_LEVEL = 'verbose';
     expect(() => loadConfig()).toThrow();
   });
+
+  it('QUERY_LOG_ENABLED 기본값은 true, QUERY_LOG_DB_PATH 기본값은 /workspace/data/queries.db', () => {
+    setValidEnv();
+    const cfg = loadConfig();
+    expect(cfg.QUERY_LOG_ENABLED).toBe(true);
+    expect(cfg.QUERY_LOG_DB_PATH).toBe('/workspace/data/queries.db');
+  });
+
+  it('QUERY_LOG_ENABLED=false 로 비활성화 가능', () => {
+    setValidEnv();
+    process.env.QUERY_LOG_ENABLED = 'false';
+    process.env.QUERY_LOG_DB_PATH = '/tmp/q.db';
+    const cfg = loadConfig();
+    expect(cfg.QUERY_LOG_ENABLED).toBe(false);
+    expect(cfg.QUERY_LOG_DB_PATH).toBe('/tmp/q.db');
+  });
 });

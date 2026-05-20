@@ -9,10 +9,11 @@ services:
     environment:
       WIKI_LOCAL_PATH: /workspace/leader-wiki
       WIKI_SYNC_INTERVAL_CRON: ""
+      PORT: "3334"
     volumes:
       - ../leader-wiki:/workspace/leader-wiki:ro
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3334:3334"
     restart: unless-stopped
     logging:
       driver: json-file

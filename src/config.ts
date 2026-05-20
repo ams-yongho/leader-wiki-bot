@@ -10,7 +10,7 @@ const Schema = z.object({
   CLAUDE_CODE_OAUTH_TOKEN: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-4-6'),
 
-  WIKI_REPO_URL: z.string().min(1).optional(),
+  WIKI_REPO_URL: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
   WIKI_REPO_BRANCH: z.string().default('main'),
   WIKI_LOCAL_PATH: z.string().min(1),
   WIKI_SYNC_INTERVAL_CRON: z.string().default('*/5 * * * *'),

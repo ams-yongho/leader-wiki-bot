@@ -81,9 +81,12 @@ async function runOnce(
         tools: ['Read', 'Glob', 'Grep'],
         allowedTools: ['Read', 'Glob', 'Grep'],
         permissionMode: 'bypassPermissions',
-        allowDangerouslySkipPermissions: true,
         abortController: controller,
         persistSession: false,
+        env: process.env as Record<string, string>,
+        stderr: (data: string) => {
+          opts.logger.warn({ claudeStderr: data.toString().trim() }, 'claude cli stderr');
+        },
       },
     });
 

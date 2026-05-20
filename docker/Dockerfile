@@ -23,13 +23,14 @@ RUN pnpm build && pnpm prune --prod
 FROM node:22-alpine AS prod
 WORKDIR /app
 RUN apk add --no-cache git openssh-client tini
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/src/prompts ./dist/prompts
-COPY --from=build /app/package.json ./
-COPY docker/entrypoint.sh /app/docker/entrypoint.sh
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist ./dist
+COPY --from=build --chown=node:node /app/src/prompts ./dist/src/prompts
+COPY --from=build --chown=node:node /app/package.json ./
+COPY --chown=node:node docker/entrypoint.sh /app/docker/entrypoint.sh
 RUN chmod +x /app/docker/entrypoint.sh
+USER node
 ENV NODE_ENV=production
 EXPOSE 3000
 ENTRYPOINT ["/sbin/tini", "--", "/app/docker/entrypoint.sh"]
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/src/server.js"]

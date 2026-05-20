@@ -111,6 +111,29 @@ tail ~/Library/Logs/leader-wiki-sync.log
 
 봇 로그는 Docker json-file 드라이버가 자동 회전 (10MB × 5개). sync 로그는 단순 append이므로 커지면 수동 정리.
 
+### 2.4 질의 로그 (SQLite)
+
+모든 슬랙 멘션 결과가 `./data/queries.db`에 누적된다. 호스트에서 직접 열어 분석한다.
+
+```bash
+# 최근 10건
+sqlite3 ./data/queries.db 'SELECT received_at, slack_user, status, substr(question,1,40) FROM queries ORDER BY id DESC LIMIT 10;'
+
+# 상태별 집계
+sqlite3 ./data/queries.db 'SELECT status, COUNT(*) FROM queries GROUP BY status;'
+
+# 자주 인용된 페이지 (상위 20)
+sqlite3 ./data/queries.db "SELECT je.value, COUNT(*) c FROM queries, json_each(queries.citations_json) je WHERE citations_json IS NOT NULL GROUP BY je.value ORDER BY c DESC LIMIT 20;"
+```
+
+수동 백업:
+
+```bash
+cp ./data/queries.db ./data/queries.db.bak.$(date +%F)
+```
+
+로그 비활성화가 필요하면 `.env`에 `QUERY_LOG_ENABLED=false` 설정 후 `docker compose -f docker-compose.prod.yml restart bot`.
+
 ---
 
 ## 3. 트러블슈팅

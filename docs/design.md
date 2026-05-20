@@ -348,6 +348,8 @@ services:
 - 에러는 stderr로 분리.
 - v2에서 Sentry/Datadog 등 검토.
 
+**Query log (v1.1 이후)**: 모든 멘션 처리 결과(성공/empty/timeout/error)를 `<repo>/data/queries.db` (SQLite)에 1건씩 기록한다. 컬럼: `event_id`, `received_at`, `completed_at`, `channel`, `thread_ts`, `slack_user`, `question`, `answer`, `citations_json`, `model`, `latency_ms`, `status`, `error_message`. 운영자는 호스트에서 `sqlite3 ./data/queries.db`로 직접 분석/백업한다. 자세한 설계는 [docs/superpowers/specs/2026-05-20-slack-query-persistence-design.md](superpowers/specs/2026-05-20-slack-query-persistence-design.md).
+
 ### 보안
 - Slack 토큰·Anthropic 키는 env로만 주입, 코드·이미지에 절대 포함 X.
 - 봇 컨테이너의 `/workspace/leader-wiki` 마운트는 **read-only**.

@@ -178,7 +178,9 @@ return async (event) => {
 | 변수 | 기본값 | 설명 |
 |---|---|---|
 | `QUERY_LOG_ENABLED` | `true` | 비활성화 시 no-op |
-| `QUERY_LOG_DB_PATH` | `/workspace/data/queries.db` | 운영 기본 경로. 로컬 dev는 `./data/queries.db` |
+| `QUERY_LOG_DB_PATH` | `/workspace/data/queries.db` | 컨테이너 내부 경로. 호스트의 `<repo>/data/`가 이 위치에 bind mount됨 |
+
+호스트 측에서는 운영자가 `sqlite3 <repo>/data/queries.db` 명령으로 직접 열어 분석·백업 가능.
 
 ---
 
@@ -192,12 +194,41 @@ return async (event) => {
 
 ## 7. 운영
 
-- **볼륨**: `docker-compose.yml` / `docker-compose.prod.yml`에 `query-log-data:/workspace/data` 볼륨 추가. `WIKI_LOCAL_PATH`는 read-only지만 `/workspace/data`는 read-write.
-- **로컬 dev**: `./data/` 디렉토리 사용. `.gitignore`에 `data/` 추가.
-- **백업**: 운영 시 `cp queries.db queries.db.bak.$(date +%F)` 정도의 일일 스냅샷 cron을 `docs/operations.md`에 명시. v1 코드에는 백업 자동화 포함하지 않음.
-- **보관 정책**: v1은 무기한 보관. 일 수십 건 트래픽으로 수년치 누적해도 메가바이트 수준. 필요해지면 `DELETE FROM queries WHERE received_at < ?` 스크립트 추가(별도 PR).
-- **분석**: 컨테이너 내부에서 `sqlite3 /workspace/data/queries.db` 또는 호스트로 파일 복사 후 분석. 별도 대시보드 없음.
-- **DB 손상 영향**: DB 손상/락 시에도 봇은 정지하지 않음. `recordQuery` 실패 시 log.error만 남기고 사용자 응답은 계속 제공.
+### 7.1 저장 위치 — 호스트 로컬 디렉토리 bind mount
+
+운영 모델이 macOS 로컬 PC Docker이므로, DB는 **호스트의 repo 내부 `./data/` 디렉토리**에 직접 저장한다. Docker named volume이 아니라 bind mount로 매핑하여 운영자가 호스트에서 즉시 sqlite 파일을 열 수 있게 한다.
+
+```
+<repo>/
+├── data/
+│   └── queries.db          ← 호스트 측 실제 파일 (gitignored)
+├── docker-compose.yml      ← 마운트: ./data:/workspace/data
+└── docker-compose.prod.yml ← 마운트: ./data:/workspace/data
+```
+
+컨테이너 내부 경로 `/workspace/data`는 read-write로 마운트 (`WIKI_LOCAL_PATH`는 read-only인 것과 대조).
+
+dev/prod 동일 경로 사용 — 별도 분기 없이 단순.
+
+### 7.2 일상 분석·백업
+
+호스트에서 직접:
+
+```bash
+# 분석
+sqlite3 ./data/queries.db 'SELECT status, COUNT(*) FROM queries GROUP BY status;'
+
+# 백업 (수동)
+cp ./data/queries.db ./data/queries.db.bak.$(date +%F)
+```
+
+자동 백업 cron 등은 v1 범위 외. 필요 시 LaunchAgent 추가(`docs/operations.md`에 가이드).
+
+### 7.3 보관 정책
+v1은 무기한 보관. 일 수십 건 트래픽으로 수년치 누적해도 메가바이트 수준. 필요해지면 `DELETE FROM queries WHERE received_at < ?` 스크립트 추가(별도 PR).
+
+### 7.4 DB 손상 영향
+DB 손상/락 시에도 봇은 정지하지 않음. `recordQuery` 실패 시 log.error만 남기고 사용자 응답은 계속 제공.
 
 ---
 
@@ -237,7 +268,7 @@ return async (event) => {
 | `src/server.ts` | 수정 — DB 부팅, worker DI에 store 주입 |
 | `src/config.ts` | 수정 — `QUERY_LOG_DB_PATH`, `QUERY_LOG_ENABLED` 추가 |
 | `package.json` | 수정 — `better-sqlite3` + `@types/better-sqlite3` 추가 |
-| `docker-compose.yml`, `docker-compose.prod.yml` | 수정 — `/workspace/data` 볼륨 추가 |
+| `docker-compose.yml`, `docker-compose.prod.yml` | 수정 — `./data:/workspace/data` bind mount 추가 (호스트 로컬 DB) |
 | `.env.example` | 수정 — 새 변수 명시 |
 | `.gitignore` | 수정 — `data/` 추가 |
 | `docs/design.md` | 수정 — 관찰성 섹션에 query log 추가 |

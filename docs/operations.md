@@ -42,7 +42,8 @@ cp .env.example .env
 `.env`를 열어 다음을 채운다:
 - `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` (또는 `SLACK_SIGNING_SECRET`)
 - `ANTHROPIC_API_KEY` 또는 `CLAUDE_CODE_OAUTH_TOKEN`
-- **중요**: `WIKI_SYNC_INTERVAL_CRON=` (값을 비워둘 것 — 컨테이너 내부 동기화 비활성화)
+- **중요**: `WIKI_SYNC_INTERVAL_CRON=` (값을 비워둘 것 — 컨테이너 내부 동기화 cron 비활성화)
+- **중요**: `WIKI_REPO_URL=` (값을 비워둘 것 — 컨테이너 내부 동기화 자체를 비활성화)
 
 ### 1.4 운영 컨테이너 기동
 

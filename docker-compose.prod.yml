@@ -9,7 +9,6 @@ services:
     environment:
       WIKI_LOCAL_PATH: /workspace/leader-wiki
       WIKI_SYNC_INTERVAL_CRON: ""
-      WIKI_REPO_URL: ""
     volumes:
       - ../leader-wiki:/workspace/leader-wiki:ro
     ports:

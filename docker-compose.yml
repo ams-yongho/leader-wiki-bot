@@ -7,12 +7,14 @@ services:
     env_file: .env
     environment:
       WIKI_LOCAL_PATH: /workspace/leader-wiki
+      QUERY_LOG_DB_PATH: /workspace/data/queries.db
     volumes:
       - ../leader-wiki:/workspace/leader-wiki:ro
       - ./src:/app/src
       - ./tests:/app/tests
       - ./package.json:/app/package.json:ro
       - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./data:/workspace/data
     ports:
       - "3000:3000"
     command: pnpm dev

@@ -59,6 +59,8 @@ cp .env.example .env
 | `QUEUE_MAX_SIZE` | 큐 대기 한도, 기본 `20` |
 | `AGENT_TIMEOUT_MS` | 에이전트 호출 타임아웃, 기본 `120000` |
 | `PORT` | HTTP 헬스체크 포트, 기본 `3000` (Socket Mode에서는 미사용) |
+| `QUERY_LOG_ENABLED` | 슬랙 질의 로그 저장 여부 (기본 `true`) |
+| `QUERY_LOG_DB_PATH` | SQLite 파일 경로 (기본 `/workspace/data/queries.db`, 호스트 `./data/queries.db`) |
 
 ### Docker로 실행 (권장)
 

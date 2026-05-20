@@ -14,9 +14,10 @@ describe('citations', () => {
       githubBaseUrl: githubBase,
       branch: 'main',
     });
-    expect(out).toBe(
+    expect(out.text).toBe(
       '자세한 건 <https://github.com/amass/leader-wiki/blob/main/wiki/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EC%95%8C%ED%8C%8C.md|프로젝트-알파> 참고',
     );
+    expect(out.citations).toEqual(['wiki/프로젝트-알파.md']);
   });
 
   it('표시 텍스트가 있는 형식도 처리: [[페이지|텍스트]]', () => {
@@ -25,17 +26,28 @@ describe('citations', () => {
       githubBaseUrl: githubBase,
       branch: 'main',
     });
-    expect(out).toContain('|아무개>');
-    expect(out).toContain('wiki/people/');
+    expect(out.text).toContain('|아무개>');
+    expect(out.text).toContain('wiki/people/');
+    expect(out.citations).toEqual(['wiki/people/김아무개.md']);
   });
 
-  it('알 수 없는 페이지명은 원본 유지', () => {
+  it('알 수 없는 페이지명은 원본 유지, citations는 빈 배열', () => {
     const out = replaceCitations('[[없는페이지]]', {
       pages,
       githubBaseUrl: githubBase,
       branch: 'main',
     });
-    expect(out).toBe('[[없는페이지]]');
+    expect(out.text).toBe('[[없는페이지]]');
+    expect(out.citations).toEqual([]);
+  });
+
+  it('같은 페이지를 여러 번 인용해도 citations는 중복 제거', () => {
+    const out = replaceCitations('[[프로젝트-알파]] 그리고 다시 [[프로젝트-알파]]', {
+      pages,
+      githubBaseUrl: githubBase,
+      branch: 'main',
+    });
+    expect(out.citations).toEqual(['wiki/프로젝트-알파.md']);
   });
 
   it('buildPageIndex는 .md 파일을 페이지명→경로로 매핑', () => {

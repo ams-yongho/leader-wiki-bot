@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 /.serena
 /.claude/worktrees
 .claude/settings.local.json
+
+# 로컬 query log SQLite
+data/

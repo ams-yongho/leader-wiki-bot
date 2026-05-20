@@ -10,8 +10,10 @@ services:
       WIKI_LOCAL_PATH: /workspace/leader-wiki
       WIKI_SYNC_INTERVAL_CRON: ""
       PORT: "3334"
+      QUERY_LOG_DB_PATH: /workspace/data/queries.db
     volumes:
       - ../leader-wiki:/workspace/leader-wiki:ro
+      - ./data:/workspace/data
     ports:
       - "127.0.0.1:3334:3334"
     restart: unless-stopped

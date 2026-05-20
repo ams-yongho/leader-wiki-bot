@@ -8,6 +8,8 @@ import {
   fetchPriorTurns as fetchPriorTurnsImpl,
   type SlackMessage,
 } from './thread-context.js';
+import { openDb, runMigrations } from './db.js';
+import { createQueryStore, noopQueryStore, type QueryStore } from './query-store.js';
 
 const config = loadConfig();
 const logger = createLogger(config.LOG_LEVEL);
@@ -27,6 +29,22 @@ const app = new bolt.App({
     setName: (_name: string) => {},
   },
 });
+
+let queryStore: QueryStore;
+if (config.QUERY_LOG_ENABLED) {
+  try {
+    const db = openDb(config.QUERY_LOG_DB_PATH);
+    runMigrations(db);
+    queryStore = createQueryStore(db);
+    logger.info({ path: config.QUERY_LOG_DB_PATH }, 'query log enabled');
+  } catch (err) {
+    logger.error({ err }, 'failed to open query log DB — falling back to noop');
+    queryStore = noopQueryStore();
+  }
+} else {
+  queryStore = noopQueryStore();
+  logger.info('query log disabled');
+}
 
 const wikiSync = createWikiSync({
   localPath: config.WIKI_LOCAL_PATH,
@@ -68,6 +86,7 @@ const worker = createWorker({
   branch: config.WIKI_REPO_BRANCH,
   model: config.ANTHROPIC_MODEL,
   timeoutMs: config.AGENT_TIMEOUT_MS,
+  recordQuery: (entry) => queryStore.recordQuery(entry),
 });
 
 app.event('app_mention', async ({ event, body }) => {

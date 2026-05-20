@@ -8,6 +8,11 @@ export interface CitationContext {
   branch: string;
 }
 
+export interface CitationResult {
+  text: string;
+  citations: string[];
+}
+
 export function buildPageIndex(files: string[]): Map<string, string> {
   const idx = new Map<string, string>();
   for (const file of files) {
@@ -19,11 +24,13 @@ export function buildPageIndex(files: string[]): Map<string, string> {
   return idx;
 }
 
-export function replaceCitations(text: string, ctx: CitationContext): string {
-  return text.replace(WIKILINK_RE, (match, raw: string, display?: string) => {
+export function replaceCitations(text: string, ctx: CitationContext): CitationResult {
+  const seen = new Set<string>();
+  const replaced = text.replace(WIKILINK_RE, (match, raw: string, display?: string) => {
     const name = raw.trim();
     const path = ctx.pages.get(name);
     if (!path) return match;
+    seen.add(path);
     const url = `${ctx.githubBaseUrl}/blob/${ctx.branch}/${path
       .split('/')
       .map(encodeURIComponent)
@@ -31,4 +38,5 @@ export function replaceCitations(text: string, ctx: CitationContext): string {
     const label = (display ?? name).trim();
     return `<${url}|${label}>`;
   });
+  return { text: replaced, citations: Array.from(seen) };
 }

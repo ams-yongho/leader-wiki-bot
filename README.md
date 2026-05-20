@@ -3,6 +3,7 @@
 `leader-wiki` 레포의 LLM-curated 위키 내용을 슬랙에서 `@leader-wiki-bot <질문>` 멘션으로 질의·응답하는 봇.
 
 설계 정본: [docs/design.md](docs/design.md)
+운영 가이드 (로컬 PC Docker): [docs/operations.md](docs/operations.md)
 
 ---
 
